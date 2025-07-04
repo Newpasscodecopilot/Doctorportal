@@ -1,0 +1,253 @@
+.tracking {
+  padding: 6rem 0 4rem;
+  background: #f8fafc;
+  min-height: 100vh;
+}
+
+.tracking-container {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.tracking-header {
+  text-align: center;
+  margin-bottom: 3rem;
+}
+
+.tracking-title {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 1rem;
+}
+
+.tracking-subtitle {
+  font-size: 1.2rem;
+  color: #64748b;
+  line-height: 1.6;
+}
+
+.tracking-form {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.form-group {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.tracking-input {
+  flex: 1;
+  padding: 1rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.tracking-input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.tracking-btn {
+  padding: 1rem 2rem;
+  background: linear-gradient(45deg, #667eea, #764ba2);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  white-space: nowrap;
+}
+
+.tracking-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.tracking-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #dc2626;
+  font-weight: 500;
+  text-align: center;
+  padding: 0.5rem;
+  background: #fee2e2;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+}
+
+.tracking-results {
+  background: white;
+  padding: 2rem;
+  border-radius: 15px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.results-title {
+  font-size: 1.5rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.tracking-id {
+  color: #667eea;
+  font-family: monospace;
+  font-size: 1.2rem;
+}
+
+.timeline {
+  position: relative;
+  padding-left: 2rem;
+}
+
+.timeline::before {
+  content: '';
+  position: absolute;
+  left: 1rem;
+  top: 0;
+  bottom: 0;
+  width: 2px;
+  background: #e2e8f0;
+}
+
+.timeline-item {
+  position: relative;
+  padding-bottom: 2rem;
+}
+
+.timeline-item.current .timeline-content {
+  background: #f0f9ff;
+  border-left: 4px solid #0ea5e9;
+}
+
+.timeline-marker {
+  position: absolute;
+  left: -1.5rem;
+  top: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+  border-radius: 50%;
+  border: 3px solid white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  z-index: 1;
+}
+
+.timeline-content {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 10px;
+  margin-left: 1rem;
+  border-left: 4px solid transparent;
+  transition: all 0.3s ease;
+}
+
+.timeline-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.timeline-status {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+.timeline-time {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.timeline-location {
+  font-weight: 500;
+  color: #4338ca;
+  margin-bottom: 0.25rem;
+}
+
+.timeline-description {
+  color: #64748b;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.demo-info {
+  background: #eff6ff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  border: 1px solid #bfdbfe;
+  text-align: center;
+}
+
+.demo-info h4 {
+  color: #1e40af;
+  margin-bottom: 0.5rem;
+}
+
+.demo-info p {
+  color: #3730a3;
+  font-family: monospace;
+  font-size: 0.9rem;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .tracking {
+    padding: 5rem 0 3rem;
+  }
+
+  .tracking-title {
+    font-size: 2rem;
+  }
+
+  .tracking-subtitle {
+    font-size: 1rem;
+  }
+
+  .tracking-form {
+    padding: 1.5rem;
+  }
+
+  .form-group {
+    flex-direction: column;
+  }
+
+  .tracking-input {
+    margin-bottom: 1rem;
+  }
+
+  .timeline {
+    padding-left: 1.5rem;
+  }
+
+  .timeline-marker {
+    left: -1.25rem;
+  }
+
+  .timeline-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.25rem;
+  }
+
+  .timeline-time {
+    font-size: 0.8rem;
+  }
+}
