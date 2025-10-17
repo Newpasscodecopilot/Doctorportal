@@ -1,8 +1,8 @@
 <?php
 // Database Configuration
 define('DB_HOST', 'localhost');
-define('DB_USER', 'root');
-define('DB_PASS', '');
+define('DB_USER', 'dppuser');
+define('DB_PASS', 'dpppass');
 define('DB_NAME', 'dpp');
 
 // Application Configuration
