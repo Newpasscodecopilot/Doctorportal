@@ -1,99 +1,93 @@
 
 <?php
 session_start();
+
+// Include security classes
+require_once 'includes/Security.php';
+require_once 'includes/Session.php';
+
+// Start secure session
+Session::start();
+
+$loginError = '';
+
 if(isset($_POST['btn_login'])){
-$useremail = $_POST['useremail'];	
-$userpass =  $_POST['userpass'];
-
-include('includes/conn.php');
-
-$q1 = "SELECT * FROM doctor where email = '$useremail'";
-$q2 = "SELECT * FROM patient where email = '$useremail'";
-$q3 = "SELECT * FROM admin where email = '$useremail'";
-
-$r = mysqli_query($con, $q1);
-$rr = mysqli_query($con, $q2);
-$ad = mysqli_query($con, $q3);
-
-if(mysqli_num_rows($r)>0){
-	while($row = mysqli_fetch_assoc($r)){
-		$dbname = $row['name'];
-		$dbemail = $row['email'];
-		$dbpass = $row['password'];
-		$type = $row['type'];
-	}
-	if($useremail == $dbemail && $userpass == $dbpass){
-		$_SESSION['useremail'] =$useremail;
-		$_SESSION['userpass'] = $userpass;
-		if($_POST['remember'] == 'on' ){
-					$expire = time()+86400;
-					setcookie('dpp', $_POST['useremail'], $expire);
-				}
-		header("location:doctor.php");
-	}
-	else
-	{
-		echo "<script>";
-	echo "alert('Wrong Doctor Email or Password')";
-	echo "</script>";
-	}
-	
-}elseif(mysqli_num_rows($rr)>0){
-	while($row = mysqli_fetch_assoc($rr)){
-		$dbid = 	@$row['id'];
-		$dbname = $row['name'];
-		$dbemail = $row['email'];
-		$dbpass = $row['password'];
-		$type = $row['type'];
-	}
-	if($useremail == $dbemail && $userpass == $dbpass){
-		$_SESSION['useremail'] =$useremail;
-		$_SESSION['userpass'] = $userpass;
-		$_SESSION['status'] = "Success";
-		if($_POST['remember'] == 'on' ){
-					$expire = time()+86400;
-					setcookie('dpp', $_POST['useremail'], $expire);
-				}
-		header("location:patient.php");
-	}
-	else{
-		echo "<script>";
-	echo "alert('Wrong Patient Email or Password')";
-	echo "</script>";
-	}
-}
-elseif(mysqli_num_rows($ad)>0){
-	while($row = mysqli_fetch_assoc($ad)){
-		$dbname = $row['name'];
-		$dbemail = $row['email'];
-		$dbpass = $row['password'];
-		}
-		if($useremail == $dbemail && $userpass == $dbpass){
-			$_SESSION['useremail'] = $useremail;
-			$_SESSION['userpass'] = $userpass;
-			$_SESSION['status'] = "Success";
-			if($_POST['remember'] == 'on' ){
-					$expire = time()+86400;
-					setcookie('dpp', $_POST['useremail'], $expire);
-				}
-			header("location:adminpanel.php");
-			
-		}else{
-			echo "<script>";
-		echo "alert('Wrong Patient Email or Password')";
-		echo "</script>";
-		}
-		
-}
-
-
-
-else{
-	echo "<script>";
-	echo "alert('Account not exist')";
-	echo "</script>";
-}
-
+    // Validate CSRF token
+    if (!isset($_POST['csrf_token']) || !Security::validateCSRFToken($_POST['csrf_token'])) {
+        $loginError = 'Invalid request. Please try again.';
+    } else {
+        $useremail = Security::sanitizeInput($_POST['useremail']);
+        $userpass = $_POST['userpass']; // Don't sanitize password
+        
+        // Validate email format
+        if (!Security::validateEmail($useremail)) {
+            $loginError = 'Please enter a valid email address.';
+        } else {
+            include('includes/conn.php');
+            
+            // Check each user type with prepared statements
+            $tables = [
+                'doctor' => 'doctor.php',
+                'patient' => 'patient.php', 
+                'admin' => 'adminpanel.php'
+            ];
+            
+            $authenticated = false;
+            
+            foreach ($tables as $table => $redirect) {
+                $stmt = executeQuery($con, "SELECT * FROM {$table} WHERE email = ?", [$useremail]);
+                
+                if ($stmt) {
+                    $user = fetchSingleResult($stmt);
+                    
+                    if ($user) {
+                        // For backward compatibility, check both plain text and hashed passwords
+                        $passwordMatch = false;
+                        
+                        if (password_verify($userpass, $user['password'])) {
+                            // Modern hashed password
+                            $passwordMatch = true;
+                        } elseif ($user['password'] == $userpass) {
+                            // Legacy plain text password - hash it for next time
+                            $hashedPassword = password_hash($userpass, PASSWORD_BCRYPT);
+                            $updateStmt = executeQuery($con, "UPDATE {$table} SET password = ? WHERE email = ?", [$hashedPassword, $useremail]);
+                            $passwordMatch = true;
+                        }
+                        
+                        if ($passwordMatch) {
+                            // Set secure session variables
+                            Session::set('useremail', $useremail);
+                            Session::set('user_type', $table);
+                            Session::set('user_id', $user[array_keys($user)[0]]); // First column is usually ID
+                            Session::set('user_name', $user['name']);
+                            Session::set('status', 'Success');
+                            
+                            // Handle remember me
+                            if (isset($_POST['remember']) && $_POST['remember'] == 'on') {
+                                $expire = time() + 86400; // 24 hours
+                                $rememberToken = bin2hex(random_bytes(32));
+                                setcookie('dpp_remember', $rememberToken, $expire, '/', '', true, true);
+                                // Store token in database for verification
+                            }
+                            
+                            // Regenerate session ID for security
+                            session_regenerate_id(true);
+                            
+                            header("Location: " . $redirect);
+                            exit;
+                        }
+                    }
+                    mysqli_stmt_close($stmt);
+                }
+            }
+            
+            if (!$authenticated) {
+                $loginError = 'Invalid email or password.';
+                // Log failed login attempt
+                error_log("Failed login attempt for email: " . $useremail . " from IP: " . $_SERVER['REMOTE_ADDR']);
+            }
+        }
+    }
 }
 ?>
 <!DOCTYPE html>
@@ -111,6 +105,7 @@ else{
     <!-- Bootstrap -->
     <link href="css/bootstrap.min.css" rel="stylesheet">
     <link href="theme/home.css" rel="stylesheet">
+    <link href="assets/css/modern-dashboard.css" rel="stylesheet">
 
     <!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
     <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
@@ -522,10 +517,16 @@ $(function () {
       </div>
       <div class="modal-body">
 	  <br>
+	  <?php if (!empty($loginError)): ?>
+	      <div class="alert alert-danger" role="alert">
+	          <?php echo htmlspecialchars($loginError); ?>
+	      </div>
+	  <?php endif; ?>
         <form action="" name="lfrom" method="POST">
+        <input type="hidden" name="csrf_token" value="<?php echo Security::generateCSRFToken(); ?>">
 		<div class="input-group">
 		<span class="input-group-addon" id="sizing-addon2"><span class="glyphicon glyphicon-envelope"></span></span>
-		<input type="email" class="form-control" required name="useremail" placeholder="Enter your email" aria-describedby="sizing-addon2">
+		<input type="email" class="form-control" required name="useremail" placeholder="Enter your email" aria-describedby="sizing-addon2" value="<?php echo isset($_POST['useremail']) ? htmlspecialchars($_POST['useremail']) : ''; ?>">
 		</div><br>
 		<div class="input-group">
 		<span class="input-group-addon" id="sizing-addon2"><span class="glyphicon glyphicon-lock"></span></span>
